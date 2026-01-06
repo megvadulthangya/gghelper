@@ -1,0 +1,25 @@
+#!/bin/bash
+# gghelper - Git workflow assistant
+# Bash wrapper for Python script
+
+# Get directory of this script
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
+
+# Try different possible locations
+if [ -f "/usr/share/gghelper/gghelper.py" ]; then
+    # Installed from package
+    exec python3 "/usr/share/gghelper/gghelper.py" "$@"
+elif [ -f "$SCRIPT_DIR/gghelper.py" ]; then
+    # Local copy in same directory
+    exec python3 "$SCRIPT_DIR/gghelper.py" "$@"
+elif [ -f "/usr/bin/gghelper.py" ]; then
+    # Alternative system location
+    exec python3 "/usr/bin/gghelper.py" "$@"
+else
+    echo "gghelper: error: could not find gghelper.py"
+    echo "Installation options:"
+    echo "  1. Install from AUR: yay -S gghelper"
+    echo "  2. Build from source: makepkg -si"
+    echo "  3. Place gghelper.py in /usr/bin/"
+    exit 1
+fi
