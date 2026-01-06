@@ -1,6 +1,6 @@
 # Maintainer: Gyöngyösi Gábor <gabor AT gshoots DOT hu>
 pkgname=gghelper
-pkgver=1.0.0
+pkgver=2.0.0
 pkgrel=1
 pkgdesc="Git workflow assistant with GitHub Actions conflict resolution"
 arch=('any')
