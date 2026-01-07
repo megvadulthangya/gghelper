@@ -274,6 +274,58 @@ echo "test" > file.txt
 gghelper --dry-run
 ```
 
+## ⚙️ Configuration Management (NEW in v2.1.0!)
+
+### Permanent Settings
+Set your preferences once and gghelper will remember them forever!
+
+```bash
+# Set language permanently
+gghelper --set-lang hu      # Hungarian forever!
+gghelper --set-lang en      # English forever!
+
+# Set learning level
+gghelper --set-level novice      # Detailed explanations
+gghelper --set-level intermediate # Moderate explanations  
+gghelper --set-level expert      # Minimal explanations (like original)
+gghelper --set-level auto        # Auto-detect (default)
+
+# Both at once
+gghelper --set-lang hu --set-level expert
+```
+
+### Config File
+Your settings are saved in `~/.config/gghelper/config.json`:
+```json
+{
+  "language": "hu",
+  "level": "expert",
+  "usage_count": 15,
+  "last_used": "2026-01-06T17:30:00"
+}
+```
+
+### Environment Variable
+You can also use `GITHELPER_LANG` environment variable:
+```bash
+export GITHELPER_LANG=hu
+gghelper  # Hungarian!
+```
+
+### Reset Configuration
+```bash
+rm -rf ~/.config/gghelper
+```
+
+### For Hungarian Users 🇭🇺
+```bash
+# Csak egyszer futtasd:
+gghelper --set-lang hu
+
+# Innentől mindig magyar:
+gghelper  # automatikusan magyarul!
+```
+
 ## ❓ FAQ
 
 ### Q: Is my data tracked or sent anywhere?
