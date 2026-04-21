@@ -31,19 +31,26 @@ A smart Git assistant that not only automates your workflow but also teaches you
 
 ### Installation
 
-Since this is part of the manjaro-awesome repository, it's automatically included in the custom Manjaro spin. To install manually:
+As of v3.0.0 gghelper is a regular Python package with a thin bash
+wrapper. Install options:
 
 ```bash
-# Clone and build
-git clone https://github.com/megvadulthangya/manjaro-awesome
-cd manjaro-awesome/gghelper
-makepkg -si
+# pip install (recommended)
+git clone https://github.com/megvadulthangya/gghelper
+cd gghelper
+pip install .
 
-# Or install manually
-sudo cp gghelper.py /usr/bin/
-sudo cp gghelper /usr/bin/
-sudo chmod +x /usr/bin/gghelper /usr/bin/gghelper.py
+# Optional: watch-mode TUI (Nord-themed repo picker)
+pip install '.[tui]'
+
+# From a local checkout without pip — the bash wrapper finds the
+# package via PYTHONPATH automatically.
+git clone https://github.com/megvadulthangya/gghelper
+ln -s "$PWD/gghelper/gghelper" ~/.local/bin/gghelper
 ```
+
+After ``pip install .`` the ``gghelper`` console script and
+``python -m gghelper`` both work everywhere.
 
 ### Basic Usage
 
@@ -88,26 +95,29 @@ gghelper --resolve-only
 # Use merge instead of rebase (safer, creates merge commit)
 gghelper --safe
 
-# Force Hungarian language
+# Force Hungarian / English language
 gghelper --lang hu
-
-# Force English language
 gghelper --lang en
 
-# Show what would be done without making changes
+# Show what would happen without touching anything
 gghelper --dry-run
 
-# Show contextual help based on your current situation
+# Contextual help based on the current repo state
 gghelper --smart-help
 
-# Show your usage statistics and progress
+# Usage statistics (real, backed by ~/.config/gghelper/progress.json)
 gghelper --stats
 
-# Set learning level manually
-gghelper --level novice    # Detailed explanations
-gghelper --level intermediate  # Moderate explanations
-gghelper --level expert    # Minimal explanations
-gghelper --level auto      # Auto-detect from git history (default)
+# Learning level
+gghelper --level novice        # Full explanations
+gghelper --level intermediate  # Short notes (default when auto)
+gghelper --level expert        # Action-only, no extra prose
+gghelper --level auto          # Behave as intermediate
+
+# Watch multiple repos for remote changes (e.g. CI running)
+gghelper --watch                    # Poll every 5 min
+gghelper --watch --interval 60      # Poll every 60 s
+gghelper --watch-config             # Pick watched repos (Nord TUI)
 ```
 
 ## 🎯 Learning Features
@@ -232,34 +242,49 @@ Options: [y]es / [e]dit / [n]o: y
 ✅ SUCCESS! Great job!
 ```
 
-## 🏗️ Architecture
+## 🏗️ Architecture (v3.0.0)
 
-The program consists of:
-- **`gghelper.py`**: Main Python script with all logic
-- **`gghelper`**: Bash wrapper for compatibility
-- **Learning system**: Adaptive explanations, quizzes, progress tracking
-- **Git operations**: Safe execution with error handling
+gghelper is a modular Python package:
+
+```
+src/gghelper/
+├── __init__.py       # __version__
+├── __main__.py       # python -m gghelper entry point
+├── cli.py            # argparse + dispatch
+├── config.py         # ~/.config/gghelper/config.json I/O
+├── git_ops.py        # thin git plumbing wrappers
+├── commit.py         # commit message prompt + convention checks
+├── workflow.py       # add → commit → remote sync → push
+├── progress.py       # progress.json (stats)
+├── smart_help.py     # --smart-help contextual advice
+├── watch.py          # --watch background monitoring
+├── i18n.py           # all user-facing strings (hu/en + levels)
+└── tui/
+    └── watch_config.py  # Nord-themed textual TUI
+```
+
+Plus ``gghelper`` (bash wrapper) and ``pyproject.toml`` for packaging.
 
 ## 📝 For Developers
 
 ### Extending gghelper
 
-The code is modular and easy to extend:
+All strings live in ``i18n.py``. To add a new message:
 
 ```python
-# To add a new explanation
-def explain_new_concept(self):
-    self.explain("new_concept_key", {
-        "hu": {"novice": "...", "intermediate": "..."},
-        "en": {"novice": "...", "intermediate": "..."}
-    })
-
-# To add a new tip category
-TipsDatabase.TIPS["new_scenario"] = {
-    "hu": ["Tip 1", "Tip 2"],
-    "en": ["Tip 1", "Tip 2"]
+# src/gghelper/i18n.py
+MESSAGES["my_new_key"] = {
+    "hu": "Új üzenet",
+    "en": "New message",
 }
+# Use it
+from gghelper import i18n
+print(i18n.msg("my_new_key", lang))
 ```
+
+For level-aware messages (novice/intermediate/expert), add to
+``LEVEL_MESSAGES`` and read with ``i18n.level_msg(key, lang, level)``.
+Expert values are typically empty strings — experts don't want prose.
 
 ### Testing
 
@@ -295,22 +320,20 @@ gghelper --set-lang hu --set-level expert
 ```
 
 ### Config File
-Your settings are saved in `~/.config/gghelper/config.json`:
+Settings live in `~/.config/gghelper/config.json`:
 ```json
 {
   "language": "hu",
   "level": "expert",
-  "usage_count": 15,
-  "last_used": "2026-01-06T17:30:00"
+  "watched_repos": ["/home/me/code/project-a", "/home/me/code/project-b"]
 }
 ```
 
-### Environment Variable
-You can also use `GITHELPER_LANG` environment variable:
-```bash
-export GITHELPER_LANG=hu
-gghelper  # Hungarian!
-```
+Run statistics (counts, conflicts, timestamps) live in
+`~/.config/gghelper/progress.json` and are shown by `gghelper --stats`.
+
+Old v2.x configs are forward-compatible — unknown keys are preserved
+and missing ones fall back to sensible defaults.
 
 ### Reset Configuration
 ```bash
