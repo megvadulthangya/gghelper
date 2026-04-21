@@ -1,0 +1,25 @@
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "gghelper"
+version = "3.0.0"
+description = "Git Workflow Mentor & Assistant"
+readme = "README.md"
+license = { file = "LICENSE" }
+authors = [{ name = "Gyöngyösi Gábor", email = "megvadulthangya@gmail.com" }]
+requires-python = ">=3.8"
+dependencies = []
+
+[project.optional-dependencies]
+tui = ["textual>=0.40"]
+
+[project.scripts]
+gghelper = "gghelper.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-dir]
+"" = "src"

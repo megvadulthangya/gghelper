@@ -1,25 +1,36 @@
 #!/bin/bash
 # gghelper - Git workflow assistant
-# Bash wrapper for Python script
+# Bash wrapper for the Python package / legacy script.
 
-# Get directory of this script
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
 
-# Try different possible locations
+# 1. Package install (pip install . or distro packaging) — preferred.
+if python3 -c "import gghelper" &>/dev/null; then
+    exec python3 -m gghelper "$@"
+fi
+
+# 2. Local checkout: src/ layout (new modular package).
+if [ -d "$SCRIPT_DIR/src/gghelper" ]; then
+    exec env PYTHONPATH="$SCRIPT_DIR/src${PYTHONPATH:+:$PYTHONPATH}" python3 -m gghelper "$@"
+fi
+
+# 3. Installed source layout under /usr/share.
+if [ -d "/usr/share/gghelper/src/gghelper" ]; then
+    exec env PYTHONPATH="/usr/share/gghelper/src${PYTHONPATH:+:$PYTHONPATH}" python3 -m gghelper "$@"
+fi
+
+# 4. Legacy single-file fallbacks.
 if [ -f "/usr/share/gghelper/gghelper.py" ]; then
-    # Installed from package
     exec python3 "/usr/share/gghelper/gghelper.py" "$@"
 elif [ -f "$SCRIPT_DIR/gghelper.py" ]; then
-    # Local copy in same directory
     exec python3 "$SCRIPT_DIR/gghelper.py" "$@"
 elif [ -f "/usr/bin/gghelper.py" ]; then
-    # Alternative system location
     exec python3 "/usr/bin/gghelper.py" "$@"
-else
-    echo "gghelper: error: could not find gghelper.py"
-    echo "Installation options:"
-    echo "  1. Install from AUR: yay -S gghelper"
-    echo "  2. Build from source: makepkg -si"
-    echo "  3. Place gghelper.py in /usr/bin/"
-    exit 1
 fi
+
+echo "gghelper: error: could not find gghelper module or gghelper.py"
+echo "Installation options:"
+echo "  1. pip install . (from the repo root)"
+echo "  2. Place the src/gghelper package in PYTHONPATH"
+echo "  3. Install from AUR: yay -S gghelper"
+exit 1
